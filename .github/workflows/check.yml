@@ -1,0 +1,48 @@
+name: check
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: 'Tutorial repository (default: the calling repository)'
+        type: string
+        default: ''
+      release:
+        description: 'eic-shell release, e.g. 26.09.0-stable (default: newest stable)'
+        type: string
+        default: ''
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        repository: ${{ inputs.repository || github.repository }}
+        path: tutorial
+    - uses: actions/checkout@v5
+      with:
+        repository: eic/tutorial-ci  # for the scripts
+        path: tutorial-ci
+    - name: Resolve eic-shell release
+      id: release
+      run: |
+        release="${{ inputs.release }}"
+        if [ -z "$release" ]; then
+          release=$(curl -s "https://hub.docker.com/v2/repositories/eicweb/eic_xl/tags?page_size=100&ordering=last_updated" \
+            | jq -r '.results[].name' | grep -E '^[0-9]{2}\.[0-9]{2}\.[0-9]+-stable$' | sort -V | tail -1)
+        fi
+        echo "release=$release" >> $GITHUB_OUTPUT
+        echo "eic-shell release: $release"
+    - uses: cvmfs-contrib/github-action-cvmfs@v5
+    - name: Check data paths
+      uses: eic/run-cvmfs-osg-eic-shell@main
+      with:
+        platform-release: "eic_xl:${{ steps.release.outputs.release }}"
+        run: python3 tutorial-ci/check_paths.py tutorial
+    - name: Run marked code blocks
+      if: ${{ !cancelled() }}
+      uses: eic/run-cvmfs-osg-eic-shell@main
+      with:
+        platform-release: "eic_xl:${{ steps.release.outputs.release }}"
+        run: python3 tutorial-ci/run_blocks.py tutorial work

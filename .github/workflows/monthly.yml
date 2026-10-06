@@ -1,0 +1,35 @@
+name: monthly
+
+on:
+  schedule:
+  - cron: '0 6 5 * *'
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'eic-shell release, e.g. 26.09.0-stable (default: newest stable)'
+        default: ''
+
+jobs:
+  tutorial:
+    strategy:
+      fail-fast: false
+      matrix:
+        tutorial:
+        - tutorial-analysis
+        - tutorial-developing-benchmarks
+        - tutorial-file-access
+        - tutorial-geometry-development-using-dd4hep
+        - tutorial-jana2
+        - tutorial-kinematic-reconstruction
+        - tutorial-mcp
+        - tutorial-modifying-geometry-digitization-etc
+        - tutorial-physics-analysis
+        - tutorial-reconstruction-algorithms
+        - tutorial-setting-up-environment
+        - tutorial-simulations-using-npsim-and-geant4
+        - tutorial-track-cluster-matching
+        - tutorial-understanding-sim-output
+    uses: ./.github/workflows/check.yml
+    with:
+      repository: eic/${{ matrix.tutorial }}
+      release: ${{ inputs.release }}
