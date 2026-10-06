@@ -4,20 +4,25 @@ Monthly checks of the [EIC tutorials](https://github.com/eic/?q=tutorial) agains
 
 - `check_paths.py` checks that every `root://` path, `xrdfs` path and `epic:` DID quoted in a tutorial
   is still available. A DID needs at least one open-access replica.
-- `run_blocks.py` runs the code blocks marked with the `ci` class, in order
-  (`learners/setup.md`, then `episodes/*.md`), in one working directory:
+- `run_blocks.py` collects the code blocks marked with the `ci` class into one script, `tutorial.sh`,
+  in the order a learner goes through the tutorial (`learners/setup.md`, `episodes/*.md`, then the other
+  `learners/*.md` pages), and runs it in one working directory:
 
   ````markdown
   ```{.bash .ci}
   xrdcp root://... ./
   ```
 
-  ```{.cpp .ci file="Test.C"}
-  void Test() { ... }
+  ```{.cpp .ci file="helloroot/src/helloroot.cxx"}
+  #include <TH1D.h>
+  ...
   ```
   ````
 
-  `.bash` and `.python` blocks are run, a block with `file=` is written to that file.
+  `.bash` blocks are run as they are, `.python` blocks with `python3`, and a block with `file=` (any
+  language: C++, CMake, ...) is written to that file, so a later `.bash` block can run `root -b -q`,
+  `cmake` or `make` on it. The check fails if a block fails or ROOT prints `Error in <...>`.
+  `tutorial.sh` is kept as a workflow artifact: the code of the whole tutorial in one file.
 
 ## Workflows
 

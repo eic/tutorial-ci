@@ -34,6 +34,8 @@ jobs:
         fi
         echo "release=$release" >> $GITHUB_OUTPUT
         echo "eic-shell release: $release"
+        repository="${{ inputs.repository || github.repository }}"
+        echo "tutorial=${repository#*/}" >> $GITHUB_OUTPUT
     - uses: cvmfs-contrib/github-action-cvmfs@v5
     - name: Check data paths
       uses: eic/run-cvmfs-osg-eic-shell@main
@@ -46,3 +48,9 @@ jobs:
       with:
         platform-release: "eic_xl:${{ steps.release.outputs.release }}"
         run: python3 tutorial-ci/run_blocks.py tutorial work
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: ${{ steps.release.outputs.tutorial }}.sh
+        path: work/tutorial.sh
+        if-no-files-found: ignore
